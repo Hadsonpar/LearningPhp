@@ -8,70 +8,88 @@
     {
       $vEmail       = trim($_POST['email']);
       $vPassword    = trim($_POST['password']);
+      
+      /* Iniciar el cifrado del password en base a  PASSWORD_BCRYPT*/
       $options      = array("cost"=>4);
       $hashCodePass = password_hash($vPassword,PASSWORD_BCRYPT,$options);
-     
+      
+      /* FILTER_VALIDATE_EMAIL comprueba si la variable $vEmail es una dirección de email válida*/
       if(filter_var($vEmail, FILTER_VALIDATE_EMAIL))       
       {
-        /* Script de validación acerca de la existencia de registros de email*/
+        /* Script SQL para realizar la validación acerca de la existencia de 
+        registros de email que se pretende registrar*/
         $sql      = "select * from users where email = :pemail";
         $script   = $pdo->prepare($sql);
         $sqlEmail = ['pemail'=>$vEmail];
-        $script->execute($sqlEmail);
+        $script->execute($sqlEmail);/* Ejecutar (DML) SELECT */
 
+        /* Sí el email no existe se procederé registrar en la base de datos, CASO CONTRARIO
+           se muestra mensaje en pantalla El correo electrónco ya se encuentra registrado */
         if($script->rowCount() == 0)
         {
-          $vNameUse     = strstr($vEmail, '@',true);
-          $vidusertype  = 1;
+          /* Se válida la longitud de caracteres ingresados, si igual o mayor a 6 caracteres se proceder 
+             Para estandarizar o mejorar el ingreso de la constraseña o password Te sugiero revisar el siguiente TUTORIAL:
+             PHP - Validar una password (buscarlo con ese nombre en el blog.hadsonpar.com)*/
+          if(strlen($vPassword) >= 6){
 
-          $sql      = "insert into users (user, email, password, idusertype) values (:puser, :pemail, :ppassword, :pidusertype)";
+            $vNameUse     = strstr($vEmail, '@',true);/* se extrae sólo el nombre de usuario */
+            $vidusertype  = 1;/* Usuario de tipo cliente */
+            /*Script SQL para iniciar la registrar */
+            $sql      = "insert into users (user, email, password, idusertype) values (:puser, :pemail, :ppassword, :pidusertype)";
+            try{
+              $handle   = $pdo->prepare($sql);
 
-          try{
-            $handle   = $pdo->prepare($sql);
-            
-            $sqlParams = [':puser'=>$vNameUse,
-                          ':pemail'=>$vEmail,
-                          ':ppassword'=>$hashCodePass,
-                          ':pidusertype'=>$vidusertype];
+              $sqlParams = [':puser'=>$vNameUse,
+                            ':pemail'=>$vEmail,
+                            ':ppassword'=>$hashCodePass,
+                            ':pidusertype'=>$vidusertype];
+              $handle->execute($sqlParams);   /* Ejecutar (DML) INSERT */
 
-            $handle->execute($sqlParams);   
-            
-            $success = 'Usuario creado con éxito';
+              $success = 'Usuario creado con éxito'; /* MENSAJE EN PANTALLA: CONFIRMACION DE INSERCIÓN */
+            }
+            catch(PDOException $e)
+            {
+              $errors[] = $e->getMessage();/* ERROR: CAPTURAR EXCEPCIÓN EN PANTALLA */
+            }                
 
+          }else{
+            $valEmail    = $vEmail;
+            $valPassword = $vPassword;
+            $alertMessage2 = 'Ingrese al menos 6 caracteres';/* ALERTA EN PANTALLA */
           }
-          catch(PDOException $e)
-          {
-            $errors[] = $e->getMessage();
-          }                
         }
         else
         {
-          /*
-          $valEmail     = $vEmail;
-          $valPassword  = $vPassword;
-          */
-          $alertEmail   = 'El email '.$vEmail.' ya se encuentra registrado';
+          $alertEmail   = 'El correo electrónico ya se encuentra registrado';/* ALERTA EN PANTALLA */
         }
+      }else{
+        $valEmail    = '';
+        $valPassword = $vPassword;
+        $errors[] = 'Por favor ingresa un correo electrónico válido'; /* ERROR: ALERTA EN PANTALLA */
       }
     }
     else
     {
-      if(!isset($_POST['email']) || empty($_POST['email']))
+      /* Validación de INPUTs email y password
+        isset: Valida si la variable esta definida.
+        empty: Valida si la variable esta vacia*/
+
+      if(!isset($_POST['email']) || empty($_POST['email'])) /* Si no esta denifida y vacia */
       {
-          $alertMessage1 = 'Por favor ingresa un correo electrónico';
+          $alertMessage1 = 'Por favor ingresa un correo electrónico';/* ALERTA EN PANTALLA */
       }
       else
       {
           $valEmail = $_POST['email'];
       }
 
-      if(!isset($_POST['password']) || empty($_POST['password']))
+      if(!isset($_POST['password']) || empty($_POST['password'])) /* Si no esta denifida y vacia */
       {
-          $alertMessage2 = 'Por favor ingresa una contraseña';
+          $alertMessage2 = 'Por favor ingresa una contraseña';/* ALERTA EN PANTALLA */
       }
       else
-      {
-          $valPassword = $_POST['password'];
+      {          
+          $valPassword = $_POST['password'];          
       }
     }
   }
@@ -147,8 +165,9 @@
               <h1>Regístrese y se parte de la comunidad de los mejores talentos y profesionales</h1>        
             </div>
             <div class="col-lg-8">    
-
+            
             <?php 
+              /* Sección de alertas (captura de mensajes y errores) */
               if(isset($errors) && count($errors) > 0)
               {
               	foreach($errors as $error_msg)
@@ -156,6 +175,8 @@
               		echo '<div class="alert alert-danger">'.$error_msg.'</div>';
               	}
               }
+
+              if(isset($alertEmail) && !empty($alertEmail))
               {
                 echo '<div class="alert alert-warning">'.$alertEmail.'</div>';
               }
@@ -175,7 +196,6 @@
                     ?>
                 </div>
                 <div class="form-group">
-                  <!--<input placeholder="Contraseña" type="password" class="form-control" name="password" id="password" data-rule="minlen:6" data-msg="Ingrese al menos 6 caracteres" />-->
                   <input placeholder="Contraseña" type="password" class="form-control" name="password" id="password" value="<?php echo ($valPassword??'')?>" />
                   <!--<div class="validate"></div>-->
                     <?php
@@ -218,8 +238,7 @@
   <!-- Vendor JS Files -->
   <script src="../assets/vendor/jquery/jquery.min.js"></script>
   <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/vendor/jquery.easing/jquery.easing.min.js"></script>
-  <!--<script src="../assets/vendor/php-email-form/validate.js"></script>-->
+  <script src="../assets/vendor/jquery.easing/jquery.easing.min.js"></script>  
   <script src="../assets/vendor/owl.carousel/owl.carousel.min.js"></script>
   <script src="../assets/vendor/venobox/venobox.min.js"></script>
   <script src="../assets/vendor/aos/aos.js"></script>
