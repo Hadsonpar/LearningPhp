@@ -2,47 +2,55 @@
   session_start();
   require_once('config/dbconfig.php');
 
+  /* @1 Validar el button bubmit si se encuentra definido */
   if(isset($_POST['submit']))
   {
+    /*@2 Validación de los INPUTs email y password
+       isset: Valida si la variable esta definida.
+       empty: Valida si la variable esta vacia*/
     if (isset($_POST['email'], $_POST['password']) && !empty($_POST['email']) && !empty($_POST['password'])) 
     {
+      /*@3 Capturar los valores de los INPUTs email y password*/
       $vEmail       = trim($_POST['email']);
       $vPassword    = trim($_POST['password']);
 
-      /* FILTER_VALIDATE_EMAIL comprueba si la variable $vEmail es una dirección de email válida*/
+      /*@4 FILTER_VALIDATE_EMAIL comprueba si la variable $vEmail es una dirección de email válida*/
       if(filter_var($vEmail, FILTER_VALIDATE_EMAIL))       
       {
-        /* Script SQL para realizar la validación acerca de la existencia de 
-        registros de email que se pretende registrar*/
+        /*@5 Script SQL para realizar la validación acerca de la existencia de 
+             registros de email que se pretende registrar*/
         $sql      = "select * from users where email = :pemail";
         $script   = $pdo->prepare($sql);
         $sqlEmail = ['pemail'=>$vEmail];
-        $script->execute($sqlEmail);/* Ejecutar (DML) SELECT */
-        
+        $script->execute($sqlEmail);/* Ejecutar (DML) SELECT en base al filtro del e-mail ingresado */
+
+        /*@5.1 Si el resultado del script ejecutado  es mayor 0 (es decir si el email existe en nuestra base de datos)
+               continuamos con la validaciòn del password, sí todo es satisfactorio nos direccionamos a la página
+               dashboard.php y finalmente salimos de dicha validación*/
         if($script->rowCount() > 0)
         {
           $getRow = $script->fetch(PDO::FETCH_ASSOC);
           if(password_verify($vPassword, $getRow['password'])){
              unset($getRow['password']);
              $_SESSION = $getRow;
-             header('location:feed/dashboard.php');
+             header('location:feed/dashboard.php');/* direccionamos a la página dashboard.php */
              exit();
           }else{
-            $errors[] = "Correo electrónico o contraseña incorrecta";
+            $errors[] = "Correo electrónico o contraseña incorrecta"; /*@6 Capturamos ALERTA sobre la contraseña*/
           }
         }else{
-          $errors[] = "Correo electrónico o contraseña incorrecta";
+          $errors[] = "Correo electrónico o contraseña incorrecta";/*@7 Capturamos ALERTA sobre la contraseña*/
         }
       }else{
+        /*@8 Capturar ALERTA DE VERIFICACION, ei el valor ingresado en el INPUT email no cumple con la verificación
+             de tipo email se monstrará dicha alerta*/
         $valEmail    = '';
         $valPassword = $vPassword;
-        $errors[] = 'Por favor ingresa un correo electrónico válido'; /* ERROR: ALERTA EN PANTALLA */
+        $errors[] = 'Por favor ingresa un correo electrónico válido';
       }
 
     }else{
-      /* Validación de INPUTs email y password
-        isset: Valida si la variable esta definida.
-        empty: Valida si la variable esta vacia*/
+      /* @9 Caso contrario los INPUTs no esta definidas o vacias me mostrar las siguientes alertas */
       if(!isset($_POST['email']) || empty($_POST['email'])) /* Si no esta denifida y vacia */
       {
           $alertMessage1 = 'Por favor ingresa un correo electrónico';/* ALERTA EN PANTALLA */
@@ -79,7 +87,9 @@
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,
+              700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,
+              400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -126,16 +136,18 @@
               }
             ?>
 
-            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" role="form" class="php-email-form" data-aos="fade-up">
+            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" role="form" 
+                  class="php-email-form" data-aos="fade-up">
               <div class="form-group">                
-                <input placeholder="Email" type="email" class="form-control" name="email" id="email" value="<?php echo ($valEmail??'')?>" />                
+                <input placeholder="Email" type="email" class="form-control" name="email" 
+                      id="email" value="<?php echo ($valEmail??'')?>" />                
                   <?php
                     echo '<div class="alertMessage">'.($alertMessage1??'').'</div>';
                   ?>                
               </div>
-
               <div class="form-group">              
-                <input placeholder="Contraseña" type="password" class="form-control" name="password" id="password" value="<?php echo ($valPassword??'')?>" />                
+                <input placeholder="Contraseña" type="password" class="form-control" name="password" 
+                      id="password" value="<?php echo ($valPassword??'')?>" />                
                   <?php
                     echo '<div class="alertMessage">'.($alertMessage2??'').'</div>';
                   ?>
@@ -145,12 +157,10 @@
                   <a href="#">¿Has olvidado tu contraseña?</a>
                 </div>                  
               </div>
-
               <button class="login-btn" type="submit" name="submit">Iniciar sesión</button>
-
               <p>¿Eres nuevo en New Talents? <a href="signup/sign-up">Regístrese ahora</a></p>
-
             </form>
+            
           </div>
         </div>
 
@@ -162,12 +172,10 @@
   <!-- Vendor JS Files -->
   <script src="assets/vendor/jquery/jquery.min.js"></script>
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/jquery.easing/jquery.easing.min.js"></script>
-  <!--<script src="assets/vendor/php-email-form/validate.js"></script>-->
+  <script src="assets/vendor/jquery.easing/jquery.easing.min.js"></script>  
   <script src="assets/vendor/owl.carousel/owl.carousel.min.js"></script>
   <script src="assets/vendor/venobox/venobox.min.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
-
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 

@@ -1,0 +1,10 @@
+body {
+    font-family: "Open Sans", sans-serif;
+    color: #585a61;
+    padding: 2%;    
+}
+
+.centrarCaja{
+    position :relative !important; 
+    left: 40% !important;
+}
