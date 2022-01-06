@@ -1,5 +1,6 @@
 <?php
 require_once('utilities/valpassword.php');
+
 if ($_POST){
    $error_encontrado="";
    if (validar_clave($_POST["clave"], $error_encontrado)){
@@ -13,6 +14,7 @@ if ($_POST){
    }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,12 +24,13 @@ if ($_POST){
     <link href="css/style.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
     <form action="index.php" method="post">        
                 
-        Escribe un Password:
-        <input type=password name="clave">
-        <input type="submit" value="Enviar">     
+                Escribe un Password:
+                <input type=password name="clave">
+                <input type="submit" value="Enviar">     
                 
     </form>
 </body>
