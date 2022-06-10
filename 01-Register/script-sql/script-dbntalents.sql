@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `dbntalents`.`users` (
   `iduser` INT NOT NULL AUTO_INCREMENT,
   `user` VARCHAR(45) NOT NULL,
   `email` VARCHAR(100) NOT NULL,
-  `password` VARCHAR(50) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
   `fullname` VARCHAR(100) NULL,
   `firstname` VARCHAR(45) NULL,
   `lastname` VARCHAR(45) NULL,
